@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from nba_api.stats.endpoints import playergamelog, teamgamelog, leaguedashteamstats, commonplayerinfo
+from nba_api.stats.endpoints import playergamelog, teamgamelog, LeagueDashTeamStats, commonplayerinfo
 from nba_api.stats.static import players, teams
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
@@ -100,13 +100,13 @@ def train_model(df):
     print(f"Root Mean Squared Error: {np.sqrt(mean_squared_error(y_test, y_pred))}")
 
     # Add predictions to the test set for analysis
-    test_results = X_test.copy()
-    test_results['ACTUAL_REBOUNDS'] = y_test
-    test_results['PREDICTED_REBOUNDS'] = y_pred
-    print("\nTest Set Results:")
-    print(test_results.head())
+    # test_results = X_test.copy()
+    # test_results['ACTUAL_REBOUNDS'] = y_test
+    # test_results['PREDICTED_REBOUNDS'] = y_pred
+    # print("\nTest Set Results:")
+    # print(test_results.head())
 
-    return model, test_results
+    return model
 
 def calculate_player_averages(player_logs, num_games):
     # Calculate rolling averages for the last num_games
@@ -132,7 +132,7 @@ def predict_next_matchup(model, player_averages, opponent_rebounds_allowed, home
 
 def get_rebounds_allowed(team_name):
     # Fetch team defensive stats
-    team_stats = leaguedashteamstats(per_mode_detailed='PerGame', measure_type_detailed_defense='Opponent')
+    team_stats = LeagueDashTeamStats(per_mode_detailed='PerGame', measure_type_detailed_defense='Opponent')
 
     # Convert to DataFrame
     df = team_stats.get_data_frames()[0]
@@ -177,17 +177,15 @@ def main():
 
     # Prepare dataset
     df = prepare_dataset(player_name, team_name, season)
-    print("Dataset Prepared:")
-    print(df.head())
+    # print("Dataset Prepared:")
+    # print(df.head())
 
     # Train the model and get test results
-    model, test_results = train_model(df)
+    model = train_model(df)
 
     # Calculate player averages for the last 5 games
     player_logs = get_player_game_logs(player_name, season)
     player_averages = calculate_player_averages(player_logs, num_games=20)
-    print("\nPlayer Averages (Last 20 Games):")
-    print(player_averages)
 
     # Predict rebounds for the next matchup
     predicted_rebounds = predict_next_matchup(model, player_averages, opponent_rebounds_allowed, home_away)
